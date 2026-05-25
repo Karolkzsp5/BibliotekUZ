@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="bibliotekuz.client/bibliotekuz.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="BibliotekUZ.Server/BibliotekUZ.Server.csproj" />
+</Solution>

@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Karol\\source\\repos\\BibliotekUZ\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{EDA4D788-AFC6-57FA-6FB6-80E84F8CE458}|bibliotekuz.client\\bibliotekuz.client.esproj|c:\\users\\karol\\source\\repos\\bibliotekuz\\bibliotekuz.client\\src\\app.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{EDA4D788-AFC6-57FA-6FB6-80E84F8CE458}|bibliotekuz.client\\bibliotekuz.client.esproj|solutionrelative:bibliotekuz.client\\src\\app.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "App.jsx",
+              "DocumentMoniker": "C:\\Users\\Karol\\source\\repos\\BibliotekUZ\\bibliotekuz.client\\src\\App.jsx",
+              "RelativeDocumentMoniker": "bibliotekuz.client\\src\\App.jsx",
+              "ToolTip": "C:\\Users\\Karol\\source\\repos\\BibliotekUZ\\bibliotekuz.client\\src\\App.jsx",
+              "RelativeToolTip": "bibliotekuz.client\\src\\App.jsx",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAACQAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2026-05-25T07:48:01.389Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
