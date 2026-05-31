@@ -14,6 +14,19 @@ Dzięki integracji z **Google Books API**, proces dodawania nowych pozycji do ka
 
 ---
 
+## 👨‍💻 Zespół projektowy
+<div align="center">
+
+| Frontend<br>Developer | Backend<br>Developer | Backend<br>Developer |
+| :---: | :---: | :---: |
+| <img src="https://github.com/Karolkzsp5.png" width="100" height="100"> | <img src="https://github.com/lukaszgrzecznik.png" width="100" height="100"> | <img src="https://github.com/7ASL.png" width="100" height="100"> |
+| **Karol Kondracki** | **Łukasz Grzecznik** | **Arkadiusz Dojlido** |
+| [@Karolkzsp5](https://github.com/Karolkzsp5) | [@lukaszgrzecznik](https://github.com/lukaszgrzecznik) | [@7ASL](https://github.com/7ASL) |
+
+</div>
+
+---
+
 ## ✨ Główne funkcjonalności
 
 System posiada wyraźny podział na strefy uprawnień oraz zautomatyzowaną logikę działającą w tle.
@@ -62,19 +75,6 @@ Projekt został zrealizowany z wykorzystaniem nowoczesnego stosu technologiczneg
 * **Visual Studio 2026** - Główne środowisko programistyczne (IDE).
 * **GitKraken** - Zarządzanie kontrolą wersji Git.
 * **GitHub Projects** - Organizacja pracy.
-
----
-
-## 👨‍💻 Zespół projektowy
-<div align="center">
-
-| Frontend<br>Developer | Backend<br>Developer | Backend<br>Developer |
-| :---: | :---: | :---: |
-| <img src="https://github.com/Karolkzsp5.png" width="100" height="100"> | <img src="https://github.com/lukaszgrzecznik.png" width="100" height="100"> | <img src="https://github.com/7ASL.png" width="100" height="100"> |
-| **Karol Kondracki** | **Łukasz Grzecznik** | **Arkadiusz Dojlido** |
-| [@Karolkzsp5](https://github.com/Karolkzsp5) | [@lukaszgrzecznik](https://github.com/lukaszgrzecznik) | [@7ASL](https://github.com/7ASL) |
-
-</div>
 
 ---
 
