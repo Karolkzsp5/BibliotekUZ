@@ -24,12 +24,16 @@ namespace BibliotekUZ.Server.Migrations
                 nullable: false,
                 defaultValue: "");
 
+            migrationBuilder.Sql(
+                "UPDATE \"AspNetUsers\" SET \"LibraryCardNumber\" = 'LIB-' || UPPER(HEX(RANDOMBLOB(4))) " +
+                "WHERE \"LibraryCardNumber\" = ''");
+
             migrationBuilder.AddColumn<DateTime>(
                 name: "RegistrationDate",
                 table: "AspNetUsers",
                 type: "TEXT",
                 nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                defaultValueSql: "CURRENT_TIMESTAMP");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_LibraryCardNumber",
