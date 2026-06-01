@@ -93,7 +93,8 @@ namespace BibliotekUZ.Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LibraryCardNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"LibraryCardNumber\" <> ''");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
