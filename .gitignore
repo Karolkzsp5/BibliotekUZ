@@ -5,6 +5,9 @@ bin/
 obj/
 .vs/
 *.user
+*.db
+*.db-shm
+*.db-wal
 
 # =========================
 # React / Node.js (Frontend)
