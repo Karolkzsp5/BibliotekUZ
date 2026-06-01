@@ -7,7 +7,7 @@ public class ApplicationUser : IdentityUser
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public DateOnly? DateOfBirth { get; set; }
-    public string LibraryCardNumber { get; set; } = string.Empty;
+    public string LibraryCardNumber { get; set; } = "LIB-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
     public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
     public bool IsBlocked { get; set; } = false;
 

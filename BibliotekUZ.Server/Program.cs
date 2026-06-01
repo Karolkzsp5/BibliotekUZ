@@ -22,8 +22,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-var jwtSecret = builder.Configuration["JwtSettings:Secret"]
-    ?? throw new InvalidOperationException("JwtSettings:Secret not configured.");
+var jwtSecret = builder.Configuration["JwtSettings:Secret"];
+var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
+var jwtAudience = builder.Configuration["JwtSettings:Audience"];
+
+if (string.IsNullOrWhiteSpace(jwtSecret))
+    throw new InvalidOperationException("JwtSettings:Secret is not configured.");
+if (string.IsNullOrWhiteSpace(jwtIssuer))
+    throw new InvalidOperationException("JwtSettings:Issuer is not configured.");
+if (string.IsNullOrWhiteSpace(jwtAudience))
+    throw new InvalidOperationException("JwtSettings:Audience is not configured.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -38,8 +46,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         ClockSkew = TimeSpan.Zero
     };
@@ -59,8 +67,9 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+if (app.Configuration.GetValue<bool>("RunMigrationsOnStartup"))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
 
