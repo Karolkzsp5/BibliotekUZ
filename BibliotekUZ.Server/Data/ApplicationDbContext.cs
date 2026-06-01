@@ -18,7 +18,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<ApplicationUser>(e =>
         {
-            e.HasIndex(u => u.LibraryCardNumber).IsUnique();
+            e.HasIndex(u => u.LibraryCardNumber)
+                .IsUnique()
+                .HasFilter("\"LibraryCardNumber\" <> ''");
             e.Ignore(u => u.FullName);
         });
 
