@@ -67,11 +67,13 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if (app.Configuration.GetValue<bool>("RunMigrationsOnStartup"))
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    if (app.Configuration.GetValue<bool>("RunMigrationsOnStartup"))
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+    }
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     await DbSeeder.SeedRolesAsync(roleManager);

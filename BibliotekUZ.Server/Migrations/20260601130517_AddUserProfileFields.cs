@@ -25,7 +25,7 @@ namespace BibliotekUZ.Server.Migrations
                 defaultValue: "");
 
             migrationBuilder.Sql(
-                "UPDATE \"AspNetUsers\" SET \"LibraryCardNumber\" = 'LIB-' || UPPER(HEX(RANDOMBLOB(4))) " +
+                "UPDATE \"AspNetUsers\" SET \"LibraryCardNumber\" = 'LIB-' || UPPER(HEX(RANDOMBLOB(8))) " +
                 "WHERE \"LibraryCardNumber\" = ''");
 
             migrationBuilder.AddColumn<DateTime>(
@@ -39,7 +39,8 @@ namespace BibliotekUZ.Server.Migrations
                 name: "IX_AspNetUsers_LibraryCardNumber",
                 table: "AspNetUsers",
                 column: "LibraryCardNumber",
-                unique: true);
+                unique: true,
+                filter: "\"LibraryCardNumber\" <> ''");
         }
 
         /// <inheritdoc />

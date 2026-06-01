@@ -30,7 +30,9 @@ public class AuthController(
         if (!result.Succeeded)
             return BadRequest(result.Errors.Select(e => e.Description));
 
-        await userManager.AddToRoleAsync(user, "Reader");
+        var addToRoleResult = await userManager.AddToRoleAsync(user, "Reader");
+        if (!addToRoleResult.Succeeded)
+            return BadRequest(addToRoleResult.Errors.Select(e => e.Description));
 
         var roles = await userManager.GetRolesAsync(user);
         var (token, expiresAt) = tokenService.GenerateToken(user, roles);
