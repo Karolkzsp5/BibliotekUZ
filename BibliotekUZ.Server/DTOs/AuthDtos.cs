@@ -1,21 +1,19 @@
 namespace BibliotekUZ.Server.DTOs;
 
-public record RegisterRequest(
+public sealed record RegisterRequest(
     string Email,
     string Password,
     string FirstName,
     string LastName,
-    DateOnly? DateOfBirth
-);
+    DateOnly? DateOfBirth);
 
-public record LoginRequest(string Email, string Password);
+public sealed record LoginRequest(string Email, string Password);
 
-public record AuthResponse(
+public sealed record AuthResponse(
     string Token,
     DateTime ExpiresAt,
     string UserId,
     string Email,
     string FirstName,
     string LastName,
-    IList<string> Roles
-);
+    IList<string> Roles);

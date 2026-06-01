@@ -23,7 +23,6 @@ public class AuthController(
             FirstName = request.FirstName,
             LastName = request.LastName,
             DateOfBirth = request.DateOfBirth,
-            LibraryCardNumber = "LIB-" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
             RegistrationDate = DateTime.UtcNow
         };
 
@@ -31,12 +30,14 @@ public class AuthController(
         if (!result.Succeeded)
             return BadRequest(result.Errors.Select(e => e.Description));
 
-        await userManager.AddToRoleAsync(user, "Reader");
+        var addToRoleResult = await userManager.AddToRoleAsync(user, "Reader");
+        if (!addToRoleResult.Succeeded)
+            return BadRequest(addToRoleResult.Errors.Select(e => e.Description));
 
         var roles = await userManager.GetRolesAsync(user);
         var (token, expiresAt) = tokenService.GenerateToken(user, roles);
 
-        return Ok(new AuthResponse(token, expiresAt, user.Id, user.Email!, user.FirstName, user.LastName, roles));
+        return Ok(new AuthResponse(token, expiresAt, user.Id, user.Email ?? string.Empty, user.FirstName, user.LastName, roles));
     }
 
     [HttpPost("login")]
@@ -53,6 +54,6 @@ public class AuthController(
         var roles = await userManager.GetRolesAsync(user);
         var (token, expiresAt) = tokenService.GenerateToken(user, roles);
 
-        return Ok(new AuthResponse(token, expiresAt, user.Id, user.Email!, user.FirstName, user.LastName, roles));
+        return Ok(new AuthResponse(token, expiresAt, user.Id, user.Email ?? string.Empty, user.FirstName, user.LastName, roles));
     }
 }
