@@ -1,6 +1,42 @@
 @BibliotekUZ.Server_HostAddress = http://localhost:5140
 
-GET {{BibliotekUZ.Server_HostAddress}}/weatherforecast/
+### Rejestracja nowego czytelnika
+### Próba ma zakończyć się nieowodzeniem 400 Bad Request jeśli konto już istnieje
+### Próba ma zakończyć się powodzeniem jak stworzymy nowe konto
+POST {{BibliotekUZ.Server_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@bibliotekuz.pl",
+  "password": "Password123!",
+  "firstName": "Jan",
+  "lastName": "Kowalski"
+}
+
+### Logowanie (Pobranie tokenu)
+### Próba ma zakończyć się powodzeniem 200 OK (po uprzednim utworzeniu NOWEGO konta)
+# @name loginRequest
+POST {{BibliotekUZ.Server_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@bibliotekuz.pl",
+  "password": "Password123!"
+}
+
+### Test Google Books API
+### Próba ma zakończyć się powodzeniem 200 OK
+GET {{BibliotekUZ.Server_HostAddress}}/api/books/lookup?isbn=9780261102217
 Accept: application/json
 
-###
+### Podgląd własnego profilu (Wymaga tokenu z logowania)
+### Próba ma zakończyć się powodzeniem 200 OK
+GET {{BibliotekUZ.Server_HostAddress}}/api/users/me
+Authorization: Bearer {{loginRequest.response.body.$.token}}
+Accept: application/json
+
+### Próba wejścia na listę wszystkich użytkowników (Zabezpieczone - wymaga roli Librarian)
+### Próba ma zakończyć się niepowodzeniem 403 Forbidden
+GET {{BibliotekUZ.Server_HostAddress}}/api/users
+Authorization: Bearer {{loginRequest.response.body.$.token}}
+Accept: application/json
