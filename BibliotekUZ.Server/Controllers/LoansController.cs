@@ -50,8 +50,13 @@ public class LoansController(
         var user = await userManager.FindByIdAsync(userId);
         if (user is null) return Unauthorized();
 
-        if (user.IsBlocked)
-            return Conflict("Account blocked due to unpaid fines.");
+        var hasOverdueBooks = await db.Loans.AnyAsync(l =>
+        l.UserId == userId &&
+        l.ReturnedAt == null &&
+        DateTime.UtcNow > l.DueDate);
+
+        if (hasOverdueBooks)
+            return Conflict("Nie możesz wypożyczyć nowej książki, ponieważ masz nieoddane pozycje po terminie.");
 
         var activeCount = await db.Loans.CountAsync(l => l.UserId == userId && l.ReturnedAt == null);
         if (activeCount >= Settings.MaxLoansPerUser)
@@ -72,8 +77,19 @@ public class LoansController(
             BorrowedAt = DateTime.UtcNow,
             DueDate = DateTime.UtcNow.AddDays(Settings.LoanDurationDays)
         };
+
         db.Loans.Add(loan);
-        await db.SaveChangesAsync();
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
 
         await db.Entry(loan).Reference(l => l.Copy).LoadAsync();
         await db.Entry(loan.Copy).Reference(c => c.Book).LoadAsync();
@@ -141,7 +157,18 @@ public class LoansController(
             loan.Copy.Status = CopyStatus.Available;
         }
 
-        await db.SaveChangesAsync();
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+
         return Ok(ToDto(loan));
     }
 
@@ -164,11 +191,24 @@ public class LoansController(
         return NoContent();
     }
 
-    private static LoanDto ToDto(Loan l) => new(
-        l.Id, l.CopyId, l.Copy.BookId, l.Copy.Book.Title,
-        l.UserId, l.User.Email!,
-        l.BorrowedAt, l.DueDate, l.ReturnedAt,
-        l.FineAmount, l.IsFinePaid,
-        l.ReturnedAt == null && DateTime.UtcNow > l.DueDate
-    );
+    private LoanDto ToDto(Loan l)
+    {
+        var now = DateTime.UtcNow;
+        var isOverdue = l.ReturnedAt == null && now > l.DueDate;
+
+        var currentFine = l.FineAmount;
+        if (isOverdue)
+        {
+            var overdueDays = (int)(now - l.DueDate).TotalDays;
+            currentFine = overdueDays * Settings.FinePerDay;
+        }
+
+        return new LoanDto(
+            l.Id, l.CopyId, l.Copy.BookId, l.Copy.Book.Title,
+            l.UserId, l.User.Email!,
+            l.BorrowedAt, l.DueDate, l.ReturnedAt,
+            currentFine, l.IsFinePaid,
+            isOverdue
+        );
+    }
 }

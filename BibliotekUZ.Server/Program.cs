@@ -61,7 +61,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.Configure<LoanSettings>(builder.Configuration.GetSection("LoanSettings"));
 builder.Services.AddScoped<ITokenService, TokenService>();
-
+builder.Services.AddHttpClient<GoogleBooksService>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 

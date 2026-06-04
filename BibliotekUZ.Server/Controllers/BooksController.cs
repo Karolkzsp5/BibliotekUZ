@@ -1,6 +1,7 @@
 using BibliotekUZ.Server.Data;
 using BibliotekUZ.Server.DTOs;
 using BibliotekUZ.Server.Models;
+using BibliotekUZ.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,18 +10,35 @@ namespace BibliotekUZ.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BooksController(ApplicationDbContext db) : ControllerBase
+public class BooksController(ApplicationDbContext db, GoogleBooksService googleBooks) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<BookDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<BookDto>>> GetAll(
+        [FromQuery] string? title,
+        [FromQuery] string? author,
+        [FromQuery] bool? available)
     {
-        var books = await db.Books
-            .Include(b => b.Copies)
+        var query = db.Books.Include(b => b.Copies).AsQueryable();
+
+        // Filtrowanie po tytule
+        if (!string.IsNullOrWhiteSpace(title))
+            query = query.Where(b => b.Title.Contains(title));
+
+        // Filtrowanie po autorze
+        if (!string.IsNullOrWhiteSpace(author))
+            query = query.Where(b => b.Author.Contains(author));
+
+        // Filtrowanie po dostępności
+        if (available == true)
+            query = query.Where(b => b.Copies.Any(c => c.Status == CopyStatus.Available));
+
+        var books = await query
             .Select(b => new BookDto(
                 b.Id, b.Title, b.Author, b.ISBN, b.Description, b.CoverUrl, b.PublishedYear,
                 b.Copies.Count,
                 b.Copies.Count(c => c.Status == CopyStatus.Available)))
             .ToListAsync();
+
         return Ok(books);
     }
 
@@ -79,5 +97,19 @@ public class BooksController(ApplicationDbContext db) : ControllerBase
         db.Books.Remove(book);
         await db.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpGet("lookup")]
+    public async Task<IActionResult> LookupBook([FromQuery] string isbn)
+    {
+        if (string.IsNullOrWhiteSpace(isbn))
+            return BadRequest("Podaj numer ISBN.");
+
+        var result = await googleBooks.LookupByIsbnAsync(isbn);
+
+        if (result is null)
+            return NotFound("Nie znaleziono książki o podanym numerze ISBN w bazie Google.");
+
+        return Ok(result);
     }
 }
