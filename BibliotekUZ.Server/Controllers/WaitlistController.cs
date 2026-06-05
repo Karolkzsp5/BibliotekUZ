@@ -32,16 +32,16 @@ public class WaitlistController(ApplicationDbContext db) : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
         if (!await db.Books.AnyAsync(b => b.Id == request.BookId))
-            return NotFound("Book not found.");
+            return NotFound("Nie znaleziono książki.");
 
         if (await db.WaitlistEntries.AnyAsync(w => w.BookId == request.BookId && w.UserId == userId))
-            return Conflict("Already in waitlist for this book.");
+            return Conflict("Już jesteś na liście oczekujących na tą książkę.");
 
         var hasActiveLoan = await db.Loans
             .Include(l => l.Copy)
             .AnyAsync(l => l.UserId == userId && l.Copy.BookId == request.BookId && l.ReturnedAt == null);
         if (hasActiveLoan)
-            return Conflict("Already have an active loan for this book.");
+            return Conflict("Masz już aktywne wypożyczenie tej książki.");
 
         var nextPosition = (await db.WaitlistEntries
             .Where(w => w.BookId == request.BookId)

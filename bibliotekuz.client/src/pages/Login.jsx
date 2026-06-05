@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-    const { login } = useAuth();
     const navigate = useNavigate();
+    const { login } = useAuth();
+
     const [isLogin, setIsLogin] = useState(true);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -13,6 +14,7 @@ const Login = () => {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
+        confirmPassword: '',
         firstName: '',
         lastName: '',
         dateOfBirth: ''
@@ -29,14 +31,29 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Walidacja haseł przed wysłaniem zapytania
+        if (!isLogin && formData.password !== formData.confirmPassword) {
+            setError('Hasła nie są identyczne. Upewnij się, że wpisałeś je poprawnie.');
+            return;
+        }
+
         setIsLoading(true);
 
-        // Wybór odpowiedniego endpointu
         const endpoint = isLogin ? '/api/Auth/login' : '/api/Auth/register';
 
         const payload = isLogin
-            ? { email: formData.email, password: formData.password }
-            : { ...formData };
+            ? {
+                email: formData.email,
+                password: formData.password
+            }
+            : {
+                email: formData.email,
+                password: formData.password,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                dateOfBirth: formData.dateOfBirth || null
+            };
 
         try {
             const response = await fetch(endpoint, {
@@ -47,14 +64,12 @@ const Login = () => {
                 body: JSON.stringify(payload)
             });
 
-            // Zabezpieczenie przed rzucaniem błędów przez serwer
             if (!response.ok) {
                 const contentType = response.headers.get('content-type');
                 let errorMessage = 'Wystąpił błąd podczas autoryzacji.';
 
                 if (contentType && contentType.includes('application/json')) {
                     const errData = await response.json();
-                    // Backend zwraca tablicę błędów przy rejestracji
                     if (Array.isArray(errData)) {
                         errorMessage = errData.join(' ');
                     } else if (errData.title) {
@@ -66,12 +81,9 @@ const Login = () => {
                 throw new Error(errorMessage);
             }
 
-            // Zapisanie tokenu JWT i roli w pamięci przeglądarki
             const data = await response.json();
 
             login(data.token, data.roles);
-
-            // Przekierowanie na stronę główną po pomyślnym zalogowaniu
             navigate('/');
 
         } catch (err) {
@@ -91,7 +103,6 @@ const Login = () => {
                                 {isLogin ? 'Logowanie' : 'Rejestracja'}
                             </h3>
 
-                            {/* Komponent Bootstrapa do wyświetlania błędów z serwera */}
                             {error && <Alert variant="danger">{error}</Alert>}
 
                             <Form onSubmit={handleSubmit}>
@@ -157,6 +168,21 @@ const Login = () => {
                                     />
                                 </Form.Group>
 
+                                {/* Pole potwierdzenia hasła */}
+                                {!isLogin && (
+                                    <Form.Group className="mb-4">
+                                        <Form.Label>Potwierdź hasło</Form.Label>
+                                        <Form.Control
+                                            type="password"
+                                            name="confirmPassword"
+                                            placeholder="Wpisz hasło ponownie"
+                                            value={formData.confirmPassword}
+                                            onChange={handleChange}
+                                            required={!isLogin}
+                                        />
+                                    </Form.Group>
+                                )}
+
                                 <Button
                                     variant="primary"
                                     type="submit"
@@ -176,6 +202,7 @@ const Login = () => {
                                         onClick={() => {
                                             setIsLogin(!isLogin);
                                             setError('');
+                                            setFormData(prev => ({ ...prev, confirmPassword: '' }));
                                         }}
                                     >
                                         {isLogin ? 'Zarejestruj się' : 'Zaloguj się'}
