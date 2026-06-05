@@ -1,43 +1,93 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import { Navbar, Container, Nav } from 'react-bootstrap';
+import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Navbar, Container, Nav, Button } from 'react-bootstrap';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import ProtectedRoute from './pages/ProtectedRoute';
+import Login from './pages/Login';
 
 // Tymczasowe komponenty
-const Home = () => <h2>Katalog Książek</h2>;
-const Login = () => <h2>Formularz Logowania</h2>;
-const ReaderPanel = () => <h2>Moje Wypożyczenia i Kolejka</h2>;
-const AdminPanel = () => <h2>Panel Administratora</h2>;
+const Home = () => <h2 className="text-black">Katalog Książek</h2>;
+const ReaderPanel = () => <h2 className="text-black">Moje Wypożyczenia i Kolejka</h2>;
+const AdminPanel = () => <h2 className="text-black">Panel Administratora (CRUD)</h2>;
+
+const NavigationBar = () => {
+    const { isAuthenticated, roles, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
+    const isLibrarian = roles.includes('Librarian');
+
+    return (
+        <Navbar bg="dark" data-bs-theme="dark" expand="lg" className="mb-4">
+            <Container>
+                <Navbar.Brand as={Link} to="/">📚 BibliotekUZ</Navbar.Brand>
+                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Collapse id="basic-navbar-nav">
+                    <Nav className="me-auto">
+                        <Nav.Link as={Link} to="/">Katalog</Nav.Link>
+                    </Nav>
+                    <Nav className="align-items-center">
+                        {isAuthenticated ? (
+                            <>
+                                <Nav.Link as={Link} to="/moje-konto">Moje Konto</Nav.Link>
+                                {/* Panel Admina widoczny tylko dla ról Librarian */}
+                                {isLibrarian && (
+                                    <Nav.Link as={Link} to="/admin" className="text-warning">
+                                        Panel Admina
+                                    </Nav.Link>
+                                )}
+                                <Button variant="outline-light" size="sm" className="ms-3" onClick={handleLogout}>
+                                    Wyloguj się
+                                </Button>
+                            </>
+                        ) : (
+                            <Nav.Link as={Link} to="/login">Zaloguj się</Nav.Link>
+                        )}
+                    </Nav>
+                </Navbar.Collapse>
+            </Container>
+        </Navbar>
+    );
+};
 
 function App() {
     return (
-        <BrowserRouter>
-            {/* Pasek nawigacyjny Bootstrap */}
-            <Navbar bg="dark" data-bs-theme="dark" expand="lg" className="mb-4">
-                <Container>
-                    <Navbar.Brand as={Link} to="/">📚 BibliotekUZ</Navbar.Brand>
-                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                    <Navbar.Collapse id="basic-navbar-nav">
-                        <Nav className="me-auto">
-                            <Nav.Link as={Link} to="/">Katalog</Nav.Link>
-                        </Nav>
-                        <Nav>
-                            <Nav.Link as={Link} to="/login">Zaloguj się</Nav.Link>
-                            <Nav.Link as={Link} to="/moje-konto">Moje Konto</Nav.Link>
-                            <Nav.Link as={Link} to="/admin" className="text-warning">Panel Admina</Nav.Link>
-                        </Nav>
-                    </Navbar.Collapse>
-                </Container>
-            </Navbar>
+        <AuthProvider>
+            <BrowserRouter>
+                <NavigationBar />
 
-            {/* Główny kontener na treść podstron */}
-            <Container className="text-black">
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/moje-konto" element={<ReaderPanel />} />
-                    <Route path="/admin" element={<AdminPanel />} />
-                </Routes>
-            </Container>
-        </BrowserRouter>
+                {/* Główny kontener na treść podstron */}
+                <Container>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/login" element={<Login />} />
+
+                        {/* Widok chroniony - dla zalogowanych */}
+                        <Route
+                            path="/moje-konto"
+                            element={
+                                <ProtectedRoute>
+                                    <ReaderPanel />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        {/* Widok chroniony - tylko dla ról Librarian */}
+                        <Route
+                            path="/admin"
+                            element={
+                                <ProtectedRoute requiredRole="Librarian">
+                                    <AdminPanel />
+                                </ProtectedRoute>
+                            }
+                        />
+                    </Routes>
+                </Container>
+            </BrowserRouter>
+        </AuthProvider>
     );
 }
 
