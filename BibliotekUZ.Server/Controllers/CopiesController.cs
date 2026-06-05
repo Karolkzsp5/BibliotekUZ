@@ -27,7 +27,7 @@ public class CopiesController(ApplicationDbContext db) : ControllerBase
     public async Task<ActionResult<CopyDto>> Add(AddCopyRequest request)
     {
         var book = await db.Books.FindAsync(request.BookId);
-        if (book is null) return NotFound("Book not found.");
+        if (book is null) return NotFound("Nie znaleziono książki.");
 
         var copy = new Copy { BookId = request.BookId, Status = CopyStatus.Available };
         db.Copies.Add(copy);
@@ -44,7 +44,7 @@ public class CopiesController(ApplicationDbContext db) : ControllerBase
         var copy = await db.Copies.FindAsync(id);
         if (copy is null) return NotFound();
         if (copy.Status == CopyStatus.Borrowed)
-            return Conflict("Cannot delete a borrowed copy.");
+            return Conflict("Nie można usunąć wypożyczonej kopii.");
 
         db.Copies.Remove(copy);
         await db.SaveChangesAsync();

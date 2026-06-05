@@ -45,11 +45,11 @@ public class AuthController(
     {
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
-            return Unauthorized("Invalid credentials.");
+            return Unauthorized("Nieprawidłowe dane logowania.");
 
         var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
         if (!result.Succeeded)
-            return Unauthorized("Invalid credentials.");
+            return Unauthorized("Nieprawidłowe dane logowania.");
 
         var roles = await userManager.GetRolesAsync(user);
         var (token, expiresAt) = tokenService.GenerateToken(user, roles);

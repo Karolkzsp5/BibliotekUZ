@@ -60,13 +60,13 @@ public class LoansController(
 
         var activeCount = await db.Loans.CountAsync(l => l.UserId == userId && l.ReturnedAt == null);
         if (activeCount >= Settings.MaxLoansPerUser)
-            return Conflict($"Loan limit of {Settings.MaxLoansPerUser} reached.");
+            return Conflict($"Osiągnięto limit wypożyczeń wynoszący: {Settings.MaxLoansPerUser}");
 
         var copy = await db.Copies
             .Where(c => c.BookId == request.BookId && c.Status == CopyStatus.Available)
             .FirstOrDefaultAsync();
         if (copy is null)
-            return Conflict("No available copies for this book.");
+            return Conflict("Brak dostępnych egzemplarzy tej książki.");
 
         copy.Status = CopyStatus.Borrowed;
 
@@ -108,7 +108,7 @@ public class LoansController(
             .FirstOrDefaultAsync(l => l.Id == id);
 
         if (loan is null) return NotFound();
-        if (loan.ReturnedAt is not null) return Conflict("Already returned.");
+        if (loan.ReturnedAt is not null) return Conflict("Książka jest już zwrócona.");
 
         var now = DateTime.UtcNow;
         loan.ReturnedAt = now;
@@ -178,7 +178,7 @@ public class LoansController(
     {
         var loan = await db.Loans.Include(l => l.User).FirstOrDefaultAsync(l => l.Id == id);
         if (loan is null) return NotFound();
-        if (loan.FineAmount == 0) return BadRequest("No fine on this loan.");
+        if (loan.FineAmount == 0) return BadRequest("W przypadku tego wypożyczenia nie zostanie nałożona żadna kara.");
 
         loan.IsFinePaid = true;
 
