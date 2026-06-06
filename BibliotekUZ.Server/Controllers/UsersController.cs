@@ -33,7 +33,8 @@ public class UsersController(
                 u.FirstName,
                 u.LastName,
                 u.LibraryCardNumber,
-                u.IsBlocked
+                u.IsBlocked,
+                u.DateOfBirth
             })
             .ToListAsync();
 
