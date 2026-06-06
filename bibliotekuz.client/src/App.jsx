@@ -3,11 +3,11 @@ import { Navbar, Container, Nav, Button } from 'react-bootstrap';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './pages/ProtectedRoute';
 import Login from './pages/Login';
+import AdminPanel from './pages/AdminPanel';
 
 // Tymczasowe komponenty
 const Home = () => <h2 className="text-black">Katalog Książek</h2>;
 const ReaderPanel = () => <h2 className="text-black">Moje Wypożyczenia i Kolejka</h2>;
-const AdminPanel = () => <h2 className="text-black">Panel Administratora (CRUD)</h2>;
 
 const NavigationBar = () => {
     const { isAuthenticated, roles, logout } = useAuth();
