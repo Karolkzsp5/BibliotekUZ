@@ -1,5 +1,6 @@
 import { Container, Row, Col, Tab, Tabs } from 'react-bootstrap';
-import BookManager from './BookManager'; 
+import BookManager from './BookManager';
+import UserManager from './UserManager';
 
 const AdminPanel = () => {
     return (
@@ -20,15 +21,14 @@ const AdminPanel = () => {
                     >
                         <Tab eventKey="books" title="Książki i Egzemplarze">
                             <div className="p-4 bg-white border rounded shadow-sm mt-3">
-                                {/* Wpięty nowy komponent tabeli */}
                                 <BookManager />
                             </div>
                         </Tab>
-                        
+
+                        {/* ZAKŁADKA UŻYTKOWNICY */}
                         <Tab eventKey="users" title="Użytkownicy">
                             <div className="p-4 bg-white border rounded shadow-sm mt-3">
-                                <h4 className="text-black">Zarządzanie Czytelnikami</h4>
-                                <p className="text-muted">Lista czytelników pojawi się tutaj...</p>
+                                <UserManager />
                             </div>
                         </Tab>
 

@@ -32,10 +32,24 @@ const Login = () => {
         e.preventDefault();
         setError('');
 
-        // Walidacja haseł przed wysłaniem zapytania
-        if (!isLogin && formData.password !== formData.confirmPassword) {
-            setError('Hasła nie są identyczne. Upewnij się, że wpisałeś je poprawnie.');
-            return;
+        // Walidacja dla rejestracji
+        if (!isLogin) {
+            if (formData.password !== formData.confirmPassword) {
+                setError('Hasła nie są identyczne. Upewnij się, że wpisałeś je poprawnie.');
+                return;
+            }
+
+            const nameRegex = /^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+$/;
+
+            if (!nameRegex.test(formData.firstName)) {
+                setError('Imię może zawierać tylko litery.');
+                return;
+            }
+
+            if (!nameRegex.test(formData.lastName)) {
+                setError('Nazwisko może zawierać tylko litery.');
+                return;
+            }
         }
 
         setIsLoading(true);
