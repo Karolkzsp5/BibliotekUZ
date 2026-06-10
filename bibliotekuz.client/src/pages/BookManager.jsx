@@ -228,10 +228,14 @@ const BookManager = () => {
                                 <td>{book.isbn || '-'}</td>
                                 <td>{book.publishedYear || '-'}</td>
                                 <td>
-                                    <Badge bg={book.availableCopies > 0 ? "success" : "danger"} className="me-1">
+                                    <Badge
+                                        bg={book.availableCopies > 0 ? "success" : "danger"}
+                                        className="me-1"
+                                        style={{ fontSize: '1em' }}
+                                    >
                                         {book.availableCopies}
                                     </Badge>
-                                    / {book.totalCopies}
+                                    <span style={{ fontSize: '1em', fontWeight: '500' }}> / {book.totalCopies}</span>
                                 </td>
                                 <td className="text-center">
                                     {/* Zmieniony przycisk na zarządzanie egzemplarzami */}
