@@ -1,6 +1,7 @@
 import { Container, Row, Col, Tab, Tabs } from 'react-bootstrap';
 import BookManager from './BookManager';
 import UserManager from './UserManager';
+import LoanManager from './LoanManager';
 
 const AdminPanel = () => {
     return (
@@ -34,8 +35,7 @@ const AdminPanel = () => {
 
                         <Tab eventKey="loans" title="Wypożyczenia i Kary">
                             <div className="p-4 bg-white border rounded shadow-sm mt-3">
-                                <h4 className="text-black">Operacje Biblioteczne</h4>
-                                <p className="text-muted">Zarządzanie wypożyczeniami pojawi się tutaj...</p>
+                                <LoanManager />
                             </div>
                         </Tab>
                     </Tabs>
