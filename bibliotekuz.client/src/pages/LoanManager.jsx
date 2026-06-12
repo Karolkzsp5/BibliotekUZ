@@ -105,7 +105,7 @@ const LoanManager = () => {
 
                             return (
                                 <tr key={loan.id}>
-                                    <td className="text-muted fw-bold">#{loan.id.substring(0, 8)}</td>
+                                    <td className="text-muted fw-bold">#{loan.id}</td>
                                     <td>{loan.userEmail}</td>
                                     <td>
                                         <strong>{loan.bookTitle}</strong> <br />

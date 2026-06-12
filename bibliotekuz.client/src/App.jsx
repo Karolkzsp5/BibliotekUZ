@@ -2,11 +2,11 @@ import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-do
 import { Navbar, Container, Nav, Button } from 'react-bootstrap';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './pages/ProtectedRoute';
+import Catalog from './pages/Catalog';
 import Login from './pages/Login';
 import AdminPanel from './pages/AdminPanel';
 
-// Tymczasowe komponenty
-const Home = () => <h2 className="text-black">Katalog Książek</h2>;
+// Tymczasowy komponent dla panelu czytelnika (zostaje, dopóki go nie zbudujemy)
 const ReaderPanel = () => <h2 className="text-black">Moje Wypożyczenia i Kolejka</h2>;
 
 const NavigationBar = () => {
@@ -62,7 +62,8 @@ function App() {
                 {/* Główny kontener na treść podstron */}
                 <Container>
                     <Routes>
-                        <Route path="/" element={<Home />} />
+                        {/* Główny Katalog jako strona startowa */}
+                        <Route path="/" element={<Catalog />} />
                         <Route path="/login" element={<Login />} />
 
                         {/* Widok chroniony - dla zalogowanych */}
