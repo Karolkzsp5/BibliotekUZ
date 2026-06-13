@@ -49,6 +49,8 @@ public class LoansController(
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var user = await userManager.FindByIdAsync(userId);
         if (user is null) return Unauthorized();
+        if (user.IsBlocked)
+            return Conflict("Twoje konto jest zablokowane. Nie możesz wypożyczać książek.");
 
         var hasOverdueBooks = await db.Loans.AnyAsync(l =>
         l.UserId == userId &&
