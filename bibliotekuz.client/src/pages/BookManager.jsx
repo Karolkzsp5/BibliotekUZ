@@ -179,6 +179,28 @@ const BookManager = () => {
         }
     };
 
+    const handleDeleteBook = async (bookId) => {
+        if (!window.confirm('Czy na pewno chcesz CAŁKOWICIE usunąć tę książkę z systemu? To działanie bezpowrotnie skasuje również wszystkie jej egzemplarze, historię wypożyczeń oraz rezerwacje.')) return;
+
+        try {
+            setError('');
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/Books/${bookId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                const textError = await response.text();
+                throw new Error(textError || 'Wystąpił błąd podczas usuwania książki.');
+            }
+
+            fetchBooks();
+        } catch (err) {
+            alert(`Błąd: ${err.message}`);
+        }
+    };
+
     // --------------------------------------------------------
     // RENDEROWANIE WIDOKU
     // --------------------------------------------------------
@@ -237,17 +259,25 @@ const BookManager = () => {
                                     </Badge>
                                     <span style={{ fontSize: '1em', fontWeight: '500' }}> / {book.totalCopies}</span>
                                 </td>
-                                <td className="text-center">
-                                    {/* Zmieniony przycisk na zarządzanie egzemplarzami */}
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        className="me-2"
-                                        onClick={() => handleOpenCopiesModal(book)}
-                                    >
-                                        Egzemplarze
-                                    </Button>
-                                    <Button variant="outline-danger" size="sm">Usuń</Button>
+                                <td className="text-center align-middle">
+                                    <div className="d-flex flex-column align-items-center gap-2">
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            className="w-100"
+                                            onClick={() => handleOpenCopiesModal(book)}
+                                        >
+                                            Egzemplarze
+                                        </Button>
+                                        <Button
+                                            variant="outline-danger"
+                                            size="sm"
+                                            className="w-100"
+                                            onClick={() => handleDeleteBook(book.id)}
+                                        >
+                                            Usuń
+                                        </Button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -369,7 +399,7 @@ const BookManager = () => {
                                                 variant="outline-danger"
                                                 size="sm"
                                                 onClick={() => handleDeleteCopy(copy.id)}
-                                                disabled={copy.status !== 'Available'} // Możemy usunąć tylko dostępne na półce
+                                                disabled={copy.status !== 'Available'} 
                                             >
                                                 Usuń
                                             </Button>

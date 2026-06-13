@@ -94,8 +94,26 @@ public class BooksController(ApplicationDbContext db, GoogleBooksService googleB
     {
         var book = await db.Books.FindAsync(id);
         if (book is null) return NotFound();
+
+        var hasActiveLoans = await db.Loans.AnyAsync(l => l.Copy.BookId == id && l.ReturnedAt == null);
+        if (hasActiveLoans)
+        {
+            return Conflict("Nie można usunąć książki, ponieważ czytelnicy mają wciąż wypożyczone jej egzemplarze. Najpierw odbierz zwroty.");
+        }
+
+        var waitlists = await db.WaitlistEntries.Where(w => w.BookId == id).ToListAsync();
+        db.WaitlistEntries.RemoveRange(waitlists);
+
+        var historyLoans = await db.Loans.Where(l => l.Copy.BookId == id).ToListAsync();
+        db.Loans.RemoveRange(historyLoans);
+
+        var copies = await db.Copies.Where(c => c.BookId == id).ToListAsync();
+        db.Copies.RemoveRange(copies);
+
         db.Books.Remove(book);
+
         await db.SaveChangesAsync();
+
         return NoContent();
     }
 

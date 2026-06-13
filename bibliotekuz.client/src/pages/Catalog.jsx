@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, InputGroup, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, InputGroup, Spinner, Alert, Badge, Pagination } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
 const Catalog = () => {
@@ -8,8 +8,10 @@ const Catalog = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-
     const [actionInProgress, setActionInProgress] = useState(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 12;
 
     const fetchBooks = async () => {
         try {
@@ -38,6 +40,20 @@ const Catalog = () => {
         book.author.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedBooks = filteredBooks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleClearSearch = () => {
+        setSearchTerm('');
+        setCurrentPage(1);
+    };
+
     const handleBorrow = async (bookId) => {
         setActionInProgress(`borrow-${bookId}`);
         try {
@@ -57,7 +73,7 @@ const Catalog = () => {
             }
 
             alert('Książka została pomyślnie wypożyczona!');
-            fetchBooks(); // Odświeżanie listy
+            fetchBooks();
         } catch (err) {
             alert(`Błąd: ${err.message}`);
         } finally {
@@ -69,8 +85,6 @@ const Catalog = () => {
         setActionInProgress(`waitlist-${bookId}`);
         try {
             const token = localStorage.getItem('token');
-
-            // ENDPOINT DO WERYFIKACJI
             const response = await fetch('/api/Waitlist', {
                 method: 'POST',
                 headers: {
@@ -92,6 +106,23 @@ const Catalog = () => {
             setActionInProgress(null);
         }
     };
+
+    // Generowanie elementów paginacji
+    const paginationItems = [];
+    for (let number = 1; number <= totalPages; number++) {
+        paginationItems.push(
+            <Pagination.Item
+                key={number}
+                active={number === currentPage}
+                onClick={() => {
+                    setCurrentPage(number);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+            >
+                {number}
+            </Pagination.Item>
+        );
+    }
 
     if (isLoading) {
         return (
@@ -122,9 +153,9 @@ const Catalog = () => {
                         <Form.Control
                             placeholder="Szukaj po tytule lub autorze..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                         />
-                        <Button variant="outline-secondary" onClick={() => setSearchTerm('')}>
+                        <Button variant="outline-secondary" onClick={handleClearSearch}>
                             Wyczyść
                         </Button>
                     </InputGroup>
@@ -134,69 +165,88 @@ const Catalog = () => {
             {filteredBooks.length === 0 ? (
                 <Alert variant="info">Nie znaleziono książek spełniających kryteria.</Alert>
             ) : (
-                <Row xs={1} md={2} lg={3} xl={4} className="g-4">
-                    {filteredBooks.map(book => {
-                        const isAvailable = book.availableCopies > 0;
-                        const isBorrowing = actionInProgress === `borrow-${book.id}`;
-                        const isWaitlisting = actionInProgress === `waitlist-${book.id}`;
+                <>
+                    <Row xs={1} md={2} lg={3} xl={4} className="g-4 mb-4">
+                        {paginatedBooks.map(book => {
+                            const isAvailable = book.availableCopies > 0;
+                            const isBorrowing = actionInProgress === `borrow-${book.id}`;
+                            const isWaitlisting = actionInProgress === `waitlist-${book.id}`;
 
-                        return (
-                            <Col key={book.id}>
-                                <Card className="h-100 shadow-sm border-0">
-                                    <div style={{ height: '250px', backgroundColor: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                        {book.coverUrl ? (
-                                            <Card.Img
-                                                variant="top"
-                                                src={book.coverUrl}
-                                                style={{ objectFit: 'contain', height: '100%', width: '100%', padding: '10px' }}
-                                            />
-                                        ) : (
-                                            <span className="text-muted">Brak okładki</span>
-                                        )}
-                                    </div>
-
-                                    <Card.Body className="d-flex flex-column">
-                                        <Card.Title className="fw-bold">{book.title}</Card.Title>
-                                        <Card.Subtitle className="mb-2 text-muted">{book.author}</Card.Subtitle>
-
-                                        <div className="mt-auto pt-3">
-                                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                                <span className="text-muted small">Wydanie: {book.publishedYear || '-'}</span>
-                                                <Badge bg={isAvailable ? "success" : "warning"} text={!isAvailable ? "dark" : "white"}>
-                                                    {isAvailable ? `Dostępne: ${book.availableCopies}` : 'Wypożyczona'}
-                                                </Badge>
-                                            </div>
-
-                                            {!isAuthenticated ? (
-                                                <Button variant="secondary" className="w-100" disabled>
-                                                    Zaloguj się, by wypożyczyć
-                                                </Button>
-                                            ) : isAvailable ? (
-                                                <Button
-                                                    variant="primary"
-                                                    className="w-100"
-                                                    disabled={actionInProgress !== null}
-                                                    onClick={() => handleBorrow(book.id)}
-                                                >
-                                                    {isBorrowing ? <Spinner size="sm" animation="border" /> : 'Wypożycz'}
-                                                </Button>
+                            return (
+                                <Col key={book.id}>
+                                    <Card className="h-100 shadow-sm border-0">
+                                        <div style={{ height: '250px', backgroundColor: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                            {book.coverUrl ? (
+                                                <Card.Img
+                                                    variant="top"
+                                                    src={book.coverUrl}
+                                                    style={{ objectFit: 'contain', height: '100%', width: '100%', padding: '10px' }}
+                                                />
                                             ) : (
-                                                <Button
-                                                    variant="outline-warning"
-                                                    className="w-100 fw-bold"
-                                                    disabled={actionInProgress !== null}
-                                                    onClick={() => handleJoinWaitlist(book.id)}
-                                                >
-                                                    {isWaitlisting ? <Spinner size="sm" animation="border" /> : 'Zapisz się do kolejki'}
-                                                </Button>
+                                                <span className="text-muted">Brak okładki</span>
                                             )}
                                         </div>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        );
-                    })}
-                </Row>
+
+                                        <Card.Body className="d-flex flex-column">
+                                            <Card.Title className="fw-bold">{book.title}</Card.Title>
+                                            <Card.Subtitle className="mb-2 text-muted">{book.author}</Card.Subtitle>
+
+                                            <div className="mt-auto pt-3">
+                                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                                    <span className="text-muted small">Wydanie: {book.publishedYear || '-'}</span>
+                                                    <Badge bg={isAvailable ? "success" : "warning"} text={!isAvailable ? "dark" : "white"}>
+                                                        {isAvailable ? `Dostępne: ${book.availableCopies}` : 'Wypożyczona'}
+                                                    </Badge>
+                                                </div>
+
+                                                {!isAuthenticated ? (
+                                                    <Button variant="secondary" className="w-100" disabled>
+                                                        Zaloguj się, by wypożyczyć
+                                                    </Button>
+                                                ) : isAvailable ? (
+                                                    <Button
+                                                        variant="primary"
+                                                        className="w-100"
+                                                        disabled={actionInProgress !== null}
+                                                        onClick={() => handleBorrow(book.id)}
+                                                    >
+                                                        {isBorrowing ? <Spinner size="sm" animation="border" /> : 'Wypożycz'}
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        variant="outline-warning"
+                                                        className="w-100 fw-bold"
+                                                        disabled={actionInProgress !== null}
+                                                        onClick={() => handleJoinWaitlist(book.id)}
+                                                    >
+                                                        {isWaitlisting ? <Spinner size="sm" animation="border" /> : 'Zapisz się do kolejki'}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            );
+                        })}
+                    </Row>
+
+                    {/* Nawigacja Paginacji - Wyświetlana tylko jeśli jest więcej niż jedna strona */}
+                    {totalPages > 1 && (
+                        <div className="d-flex justify-content-center mt-5">
+                            <Pagination>
+                                <Pagination.Prev
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                />
+                                {paginationItems}
+                                <Pagination.Next
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                />
+                            </Pagination>
+                        </div>
+                    )}
+                </>
             )}
         </Container>
     );
