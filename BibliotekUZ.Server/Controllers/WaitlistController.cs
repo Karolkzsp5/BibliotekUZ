@@ -26,6 +26,22 @@ public class WaitlistController(ApplicationDbContext db) : ControllerBase
         return Ok(entries);
     }
 
+    [HttpGet("my")]
+    public async Task<ActionResult<IEnumerable<WaitlistEntryDto>>> GetMyWaitlist()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+        var entries = await db.WaitlistEntries
+            .Where(w => w.UserId == userId)
+            .Include(w => w.Book)
+            .Include(w => w.User)
+            .OrderBy(w => w.CreatedAt)
+            .Select(w => new WaitlistEntryDto(w.Id, w.BookId, w.Book.Title, w.UserId, w.User.Email!, w.Position, w.CreatedAt))
+            .ToListAsync();
+
+        return Ok(entries);
+    }
+
     [HttpPost]
     public async Task<ActionResult<WaitlistEntryDto>> Join(JoinWaitlistRequest request)
     {

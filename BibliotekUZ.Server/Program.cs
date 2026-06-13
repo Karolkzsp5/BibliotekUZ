@@ -77,6 +77,10 @@ using (var scope = app.Services.CreateScope())
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     await DbSeeder.SeedRolesAsync(roleManager);
+
+    // Reset wypo¿yczeñ
+    //var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    //await DbSeeder.ResetLoansAndCopiesAsync(dbContext);
 }
 
 app.UseDefaultFiles();
