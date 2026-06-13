@@ -5,9 +5,8 @@ import ProtectedRoute from './pages/ProtectedRoute';
 import Catalog from './pages/Catalog';
 import Login from './pages/Login';
 import AdminPanel from './pages/AdminPanel';
+import ReaderPanel from './pages/ReaderPanel';
 
-// Tymczasowy komponent dla panelu czytelnika (zostaje, dopóki go nie zbudujemy)
-const ReaderPanel = () => <h2 className="text-black">Moje Wypożyczenia i Kolejka</h2>;
 
 const NavigationBar = () => {
     const { isAuthenticated, roles, logout } = useAuth();
