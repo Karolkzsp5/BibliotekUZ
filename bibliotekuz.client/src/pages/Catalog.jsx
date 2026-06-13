@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, InputGroup, Spinner, Alert, Badge } from 'react-bootstrap';
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from '../context/AuthContext';
 
 const Catalog = () => {
     const { isAuthenticated } = useAuth();
@@ -8,41 +8,40 @@ const Catalog = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [borrowingId, setBorrowingId] = useState(null);
+
+    const [actionInProgress, setActionInProgress] = useState(null);
+
+    const fetchBooks = async () => {
+        try {
+            setError('');
+            const response = await fetch('/api/Books');
+
+            if (!response.ok) {
+                throw new Error('Nie udało się pobrać katalogu książek.');
+            }
+
+            const data = await response.json();
+            setBooks(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchBooks = async () => {
-            try {
-                setError('');
-                const response = await fetch('/api/Books');
-
-                if (!response.ok) {
-                    throw new Error('Nie udało się pobrać katalogu książek.');
-                }
-
-                const data = await response.json();
-                setBooks(data);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         fetchBooks();
     }, []);
 
-    // Filtrowanie po tytule lub autorze
     const filteredBooks = books.filter(book =>
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.author.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleBorrow = async (bookId) => {
-        setBorrowingId(bookId);
+        setActionInProgress(`borrow-${bookId}`);
         try {
             const token = localStorage.getItem('token');
-
             const response = await fetch('/api/Loans', {
                 method: 'POST',
                 headers: {
@@ -54,20 +53,43 @@ const Catalog = () => {
 
             if (!response.ok) {
                 const textError = await response.text();
-                throw new Error(textError || 'Nie udało się wypożyczyć książki. Być może osiągnąłeś limit?');
+                throw new Error(textError || 'Nie udało się wypożyczyć książki.');
             }
 
             alert('Książka została pomyślnie wypożyczona!');
-
-            // Odświeżenie listy po wypożyczeniu, by zaktualizować liczbę dostępnych egzemplarzy
-            const updatedResponse = await fetch('/api/Books');
-            const updatedData = await updatedResponse.json();
-            setBooks(updatedData);
-
+            fetchBooks(); // Odświeżanie listy
         } catch (err) {
             alert(`Błąd: ${err.message}`);
         } finally {
-            setBorrowingId(null);
+            setActionInProgress(null);
+        }
+    };
+
+    const handleJoinWaitlist = async (bookId) => {
+        setActionInProgress(`waitlist-${bookId}`);
+        try {
+            const token = localStorage.getItem('token');
+
+            // ENDPOINT DO WERYFIKACJI
+            const response = await fetch('/api/Waitlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ bookId })
+            });
+
+            if (!response.ok) {
+                const textError = await response.text();
+                throw new Error(textError || 'Nie udało się zapisać do kolejki.');
+            }
+
+            alert('Pomyślnie zapisano do kolejki oczekujących!');
+        } catch (err) {
+            alert(`Błąd: ${err.message}`);
+        } finally {
+            setActionInProgress(null);
         }
     };
 
@@ -110,22 +132,22 @@ const Catalog = () => {
             </Row>
 
             {filteredBooks.length === 0 ? (
-                <Alert variant="info">Nie znaleziono książek spełniających kryteria wyszukiwania.</Alert>
+                <Alert variant="info">Nie znaleziono książek spełniających kryteria.</Alert>
             ) : (
                 <Row xs={1} md={2} lg={3} xl={4} className="g-4">
                     {filteredBooks.map(book => {
                         const isAvailable = book.availableCopies > 0;
+                        const isBorrowing = actionInProgress === `borrow-${book.id}`;
+                        const isWaitlisting = actionInProgress === `waitlist-${book.id}`;
 
                         return (
                             <Col key={book.id}>
                                 <Card className="h-100 shadow-sm border-0">
-                                    {/* Jeśli nie ma okładki, dajemy bezpieczny placeholder */}
                                     <div style={{ height: '250px', backgroundColor: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                                         {book.coverUrl ? (
                                             <Card.Img
                                                 variant="top"
                                                 src={book.coverUrl}
-                                                alt={`Okładka ${book.title}`}
                                                 style={{ objectFit: 'contain', height: '100%', width: '100%', padding: '10px' }}
                                             />
                                         ) : (
@@ -140,26 +162,34 @@ const Catalog = () => {
                                         <div className="mt-auto pt-3">
                                             <div className="d-flex justify-content-between align-items-center mb-3">
                                                 <span className="text-muted small">Wydanie: {book.publishedYear || '-'}</span>
-                                                <Badge bg={isAvailable ? "success" : "danger"}>
-                                                    {isAvailable ? `Dostępne: ${book.availableCopies}` : 'Niedostępna'}
+                                                <Badge bg={isAvailable ? "success" : "warning"} text={!isAvailable ? "dark" : "white"}>
+                                                    {isAvailable ? `Dostępne: ${book.availableCopies}` : 'Wypożyczona'}
                                                 </Badge>
                                             </div>
 
-                                            <Button
-                                                variant="primary"
-                                                className="w-100"
-                                                disabled={!isAvailable || borrowingId === book.id || !isAuthenticated}
-                                                onClick={() => handleBorrow(book.id)}
-                                            >
-                                                {!isAuthenticated
-                                                    ? 'Zaloguj się, by wypożyczyć'
-                                                    : borrowingId === book.id
-                                                        ? <Spinner size="sm" animation="border" />
-                                                        : isAvailable
-                                                            ? 'Wypożycz'
-                                                            : 'Brak egzemplarzy'
-                                                }
-                                            </Button>
+                                            {!isAuthenticated ? (
+                                                <Button variant="secondary" className="w-100" disabled>
+                                                    Zaloguj się, by wypożyczyć
+                                                </Button>
+                                            ) : isAvailable ? (
+                                                <Button
+                                                    variant="primary"
+                                                    className="w-100"
+                                                    disabled={actionInProgress !== null}
+                                                    onClick={() => handleBorrow(book.id)}
+                                                >
+                                                    {isBorrowing ? <Spinner size="sm" animation="border" /> : 'Wypożycz'}
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant="outline-warning"
+                                                    className="w-100 fw-bold"
+                                                    disabled={actionInProgress !== null}
+                                                    onClick={() => handleJoinWaitlist(book.id)}
+                                                >
+                                                    {isWaitlisting ? <Spinner size="sm" animation="border" /> : 'Zapisz się do kolejki'}
+                                                </Button>
+                                            )}
                                         </div>
                                     </Card.Body>
                                 </Card>
