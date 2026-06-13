@@ -43,7 +43,7 @@ const LoanManager = () => {
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`/api/Loans/${loanId}/return`, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -51,13 +51,38 @@ const LoanManager = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Nie udało się zarejestrować zwrotu.');
+                const textError = await response.text();
+                throw new Error(textError || 'Nie udało się zarejestrować zwrotu.');
             }
 
             // Odświeżenie listy po udanym zwrocie
             fetchLoans();
         } catch (err) {
             alert(err.message);
+        }
+    };
+
+    const handlePayFine = async (loanId) => {
+        if (!window.confirm('Czy na pewno chcesz oznaczyć tę karę jako opłaconą? (Zdejmie to również blokadę z konta użytkownika)')) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/Loans/${loanId}/pay-fine`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const textError = await response.text();
+                throw new Error(textError || 'Nie udało się przetworzyć płatności.');
+            }
+
+            fetchLoans();
+        } catch (err) {
+            alert(`Błąd: ${err.message}`);
         }
     };
 
@@ -100,11 +125,11 @@ const LoanManager = () => {
                     </thead>
                     <tbody>
                         {loans.map((loan) => {
-                            // Sprawdzamy, czy termin minął i czy książka nie została jeszcze zwrócona
                             const isOverdue = new Date(loan.dueDate) < new Date() && !loan.returnedAt;
 
                             return (
                                 <tr key={loan.id}>
+                                    {/* Usunięto .substring(0, 8), aby uniknąć błędu z liczbowym ID */}
                                     <td className="text-muted fw-bold">#{loan.id}</td>
                                     <td>{loan.userEmail}</td>
                                     <td>
@@ -117,27 +142,45 @@ const LoanManager = () => {
                                     </td>
                                     <td>
                                         {loan.returnedAt ? (
-                                            <Badge bg="secondary">Zwrócono</Badge>
+                                            <Badge bg="secondary" className="mb-1 d-block">Zwrócono</Badge>
                                         ) : isOverdue ? (
-                                            <div>
-                                                <Badge bg="danger" className="mb-1">Przetrzymana</Badge>
-                                                {loan.fineAmount > 0 && (
-                                                    <div className="text-danger small">Kara: {loan.fineAmount} zł</div>
-                                                )}
-                                            </div>
+                                            <Badge bg="danger" className="mb-1 d-block">Przetrzymana</Badge>
                                         ) : (
-                                            <Badge bg="success">Wypożyczona</Badge>
+                                            <Badge bg="success" className="mb-1 d-block">Wypożyczona</Badge>
+                                        )}
+
+                                        {/* Wyświetlanie informacji o karze */}
+                                        {loan.fineAmount > 0 && (
+                                            <div className={`small fw-bold ${loan.isFinePaid ? 'text-success' : 'text-danger'}`}>
+                                                Kara: {loan.fineAmount} zł {loan.isFinePaid ? '(Opłacona)' : ''}
+                                            </div>
                                         )}
                                     </td>
                                     <td>
-                                        <Button
-                                            variant="primary"
-                                            size="sm"
-                                            onClick={() => handleReturnBook(loan.id)}
-                                            disabled={loan.returnedAt !== null}
-                                        >
-                                            {loan.returnedAt ? 'Zakończone' : 'Odbierz zwrot'}
-                                        </Button>
+                                        <div className="d-flex flex-column align-items-center gap-2">
+                                            {!loan.returnedAt && (
+                                                <Button
+                                                    variant="primary"
+                                                    size="sm"
+                                                    className="w-100"
+                                                    onClick={() => handleReturnBook(loan.id)}
+                                                >
+                                                    Odbierz zwrot
+                                                </Button>
+                                            )}
+
+                                            {/* Przycisk opłacania kary pojawia się tylko, gdy jest kara i nie jest opłacona */}
+                                            {loan.fineAmount > 0 && !loan.isFinePaid && (
+                                                <Button
+                                                    variant="success"
+                                                    size="sm"
+                                                    className="w-100"
+                                                    onClick={() => handlePayFine(loan.id)}
+                                                >
+                                                    Opłać karę
+                                                </Button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             );
